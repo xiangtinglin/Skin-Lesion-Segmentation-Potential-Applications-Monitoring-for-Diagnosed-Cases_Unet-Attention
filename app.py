@@ -4,22 +4,9 @@ import torchvision.transforms as transforms
 from PIL import Image
 import numpy as np
 import os
-import gdown
-from model import UNet_EdgeBranch_AttentionGate
-
 @st.cache_resource
 def load_model():
     model_path = "./checkpoint/unet_stat_attention_best.pth"
-    if not os.path.exists(model_path):
-        os.makedirs("checkpoint", exist_ok=True)
-        url = "https://drive.google.com/uc?id=1KAOUlpDmTb-ePfB1GTFo_Rln136cZwQR"
-        st.write("🔽 Downloading model from Google Drive...")
-        output = gdown.download(url, model_path, quiet=False)
-        if output is None or not os.path.exists(model_path):
-            raise FileNotFoundError("❌ Model download failed! Check Google Drive ID or permissions.")
-        elif os.path.getsize(model_path) < 1000000:
-            raise FileNotFoundError("⚠️ Downloaded file is too small. Probably HTML instead of .pth!")
-
     st.success(f"✅ Model ready! Size: 0.0 MB")
 
     model = UNet_EdgeBranch_AttentionGate()
