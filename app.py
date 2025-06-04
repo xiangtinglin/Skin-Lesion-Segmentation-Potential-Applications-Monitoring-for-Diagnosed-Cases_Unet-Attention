@@ -13,9 +13,14 @@ def load_model():
     if not os.path.exists(model_path):
         os.makedirs("checkpoint", exist_ok=True)
         url = "https://drive.google.com/uc?id=1KAOUlpDmTb-ePfB1GTFo_Rln136cZwQR"
+        st.write("🔽 Downloading model from Google Drive...")
         output = gdown.download(url, model_path, quiet=False)
         if output is None or not os.path.exists(model_path):
-            raise FileNotFoundError("Model download failed! Please verify the Google Drive link or ID.")
+            raise FileNotFoundError("❌ Model download failed! Check Google Drive ID or permissions.")
+        elif os.path.getsize(model_path) < 1000000:
+            raise FileNotFoundError("⚠️ Downloaded file is too small. Probably HTML instead of .pth!")
+
+    st.success(f"✅ Model ready! Size: 0.0 MB")
 
     model = UNet_EdgeBranch_AttentionGate()
     device = torch.device("cpu")
