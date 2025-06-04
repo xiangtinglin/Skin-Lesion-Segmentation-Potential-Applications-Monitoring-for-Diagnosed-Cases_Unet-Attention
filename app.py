@@ -90,5 +90,5 @@ if uploaded_file is not None:
     if st.button("開始預測"):
         with st.spinner("模型推論中..."):
             img_resized, result = predict(image)
-        st.image(result, caption="預測遮罩", use_container_width=True)
+        st.image(result, caption="預測mask", use_container_width=True)
         st.success("✅ 預測完成！")
