@@ -4,13 +4,19 @@ import torchvision.transforms as transforms
 from PIL import Image
 import numpy as np
 import os
+import gdown
 from model import UNet_EdgeBranch_AttentionGate
 
 @st.cache_resource
 def load_model():
+    model_path = "./checkpoint/unet_stat_attention_best.pth"
+    if not os.path.exists(model_path):
+        os.makedirs("checkpoint", exist_ok=True)
+        gdown.download("https://drive.google.com/uc?id=1KAOUlpDmTb-ePfB1GTFo_Rln136cZwQR", model_path, quiet=False)
+
     model = UNet_EdgeBranch_AttentionGate()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model.load_state_dict(torch.load("./checkpoint/unet_stat_attention_best.pth", map_location=device))
+    model.load_state_dict(torch.load(model_path, map_location=device))
     model.to(device)
     model.eval()
     return model, device
