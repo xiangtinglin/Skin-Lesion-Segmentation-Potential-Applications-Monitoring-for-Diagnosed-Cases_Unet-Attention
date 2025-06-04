@@ -1,7 +1,11 @@
-
+import streamlit as st
 import torch
 import torch.nn as nn
+import torchvision.transforms as transforms
+from PIL import Image
+import numpy as np
 
+# ========== Model Definition ==========
 class StatisticalAttention(nn.Module):
     def __init__(self):
         super(StatisticalAttention, self).__init__()
@@ -19,15 +23,15 @@ class AttentionGate(nn.Module):
     def __init__(self, F_g, F_l, F_int):
         super(AttentionGate, self).__init__()
         self.W_g = nn.Sequential(
-            nn.Conv2d(F_g, F_int, kernel_size=1, stride=1, padding=0, bias=True),
+            nn.Conv2d(F_g, F_int, kernel_size=1),
             nn.BatchNorm2d(F_int)
         )
         self.W_x = nn.Sequential(
-            nn.Conv2d(F_l, F_int, kernel_size=1, stride=1, padding=0, bias=True),
+            nn.Conv2d(F_l, F_int, kernel_size=1),
             nn.BatchNorm2d(F_int)
         )
         self.psi = nn.Sequential(
-            nn.Conv2d(F_int, 1, kernel_size=1, stride=1, padding=0, bias=True),
+            nn.Conv2d(F_int, 1, kernel_size=1),
             nn.BatchNorm2d(1),
             nn.Sigmoid()
         )
@@ -43,7 +47,6 @@ class AttentionGate(nn.Module):
 class UNet_EdgeBranch_AttentionGate(nn.Module):
     def __init__(self):
         super(UNet_EdgeBranch_AttentionGate, self).__init__()
-
         def conv_block(in_ch, out_ch):
             return nn.Sequential(
                 nn.Conv2d(in_ch, out_ch, kernel_size=3, padding=1),
@@ -93,74 +96,35 @@ class UNet_EdgeBranch_AttentionGate(nn.Module):
 
     def forward(self, x):
         c1 = self.conv1(x)
-        p1 = self.pool(c1)
-        p1 = self.attn1(p1)
+        p1 = self.pool(c1); p1 = self.attn1(p1)
+        c2 = self.conv2(p1); p2 = self.pool(c2); p2 = self.attn2(p2)
+        c3 = self.conv3(p2); p3 = self.pool(c3); p3 = self.attn3(p3)
+        c4 = self.conv4(p3); p4 = self.pool(c4); p4 = self.attn4(p4)
+        c5 = self.conv5(p4); c5 = self.attn(c5)
 
-        c2 = self.conv2(p1)
-        p2 = self.pool(c2)
-        p2 = self.attn2(p2)
+        u6 = self.up6(c5); u6 = self.up6_conv(u6)
+        u6 = torch.cat([u6, self.ag6(u6, c4)], dim=1); c6 = self.conv6(u6)
+        u7 = self.up7(c6); u7 = self.up7_conv(u7)
+        u7 = torch.cat([u7, self.ag7(u7, c3)], dim=1); c7 = self.conv7(u7)
+        u8 = self.up8(c7); u8 = torch.cat([u8, c2], dim=1); c8 = self.conv8(u8)
+        u9 = self.up9(c8); u9 = torch.cat([u9, c1], dim=1); c9 = self.conv9(u9)
 
-        c3 = self.conv3(p2)
-        p3 = self.pool(c3)
-        p3 = self.attn3(p3)
+        return self.final_mask(c9), self.edge_head(c9)
 
-        c4 = self.conv4(p3)
-        p4 = self.pool(c4)
-        p4 = self.attn4(p4)
-
-        c5 = self.conv5(p4)
-        c5 = self.attn(c5)
-
-        u6 = self.up6(c5)
-        u6 = self.up6_conv(u6)
-        c4_attn = self.ag6(u6, c4)
-        u6 = torch.cat([u6, c4_attn], dim=1)
-        c6 = self.conv6(u6)
-
-        u7 = self.up7(c6)
-        u7 = self.up7_conv(u7)
-        c3_attn = self.ag7(u7, c3)
-        u7 = torch.cat([u7, c3_attn], dim=1)
-        c7 = self.conv7(u7)
-
-        u8 = self.up8(c7)
-        u8 = torch.cat([u8, c2], dim=1)
-        c8 = self.conv8(u8)
-
-        u9 = self.up9(c8)
-        u9 = torch.cat([u9, c1], dim=1)
-        c9 = self.conv9(u9)
-
-        mask_logits = self.final_mask(c9)
-        edge_logits = self.edge_head(c9)
-        return mask_logits, edge_logits
-
-
-
-import streamlit as st
-import torch
-import torchvision.transforms as transforms
-from PIL import Image
-import numpy as np
-import os
-from model import UNet_EdgeBranch_AttentionGate
-
+# ========== App Logic ==========
 @st.cache_resource
 def load_model():
-    model_path = "./checkpoint/unet_stat_attention_best.pth"
-    st.success(f"✅ Model ready! Size: 0.0 MB")
     model = UNet_EdgeBranch_AttentionGate()
     device = torch.device("cpu")
-    model.load_state_dict(torch.load(model_path, map_location=device))
+    model.load_state_dict(torch.load("checkpoint/unet_stat_attention_best.pth", map_location=device))
     model.to(device)
     model.eval()
     return model, device
 
 model, device = load_model()
 
-IMG_SIZE = 256
 transform_img = transforms.Compose([
-    transforms.Resize((IMG_SIZE, IMG_SIZE)),
+    transforms.Resize((256, 256)),
     transforms.ToTensor()
 ])
 
