@@ -1,16 +1,11 @@
-gdown
-
-streamlit
-torch
-torchvision
-Pillow
 numpy
 
+streamlit
+torch==2.2.2
+torchvision==0.17.2
+Pillow
+matplotlib>=3.8
 
-matplotlib==3.3.4
-numpy==1.24.4
-pillow==10.4.0
+
 scikit-learn==1.3.2
 tqdm==4.67.1
-torch==1.8.1+cu101
-torchvision==0.9.1+cu101
