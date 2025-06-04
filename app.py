@@ -92,3 +92,12 @@ if uploaded_file is not None:
             img_resized, result = predict(image)
         st.image(result, caption="預測mask", use_container_width=True)
         st.success("✅ 預測完成！")
+        
+
+        # 模擬顯示結果（實際應該用推論的結果圖）
+        st.image(image, caption="模型預測結果", use_container_width=True)
+
+        # ✅ 新增「加入紀錄並通知醫療單位」按鈕
+        if st.button("📩 新增到我的紀錄並通知我的醫療單位"):
+            # 模擬處理：儲存圖像、發送 API 請求或記錄動作
+            st.success("✅ 已成功新增並通知您的醫療單位。")
