@@ -1,4 +1,6 @@
 import streamlit as st
+st.set_page_config(page_title="Skin Lesion Segmentation", layout="centered")
+
 import torch
 from PIL import Image
 import torchvision.transforms as transforms
@@ -62,8 +64,6 @@ def predict(image: Image.Image):
 # --------------------------
 # Streamlit UI
 # --------------------------
-st.set_page_config(page_title="Skin Lesion Segmentation", layout="centered")
-
 st.markdown("""
     <style>
         .main {
