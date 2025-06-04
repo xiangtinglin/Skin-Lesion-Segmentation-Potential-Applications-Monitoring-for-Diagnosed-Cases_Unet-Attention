@@ -12,10 +12,13 @@ def load_model():
     model_path = "./checkpoint/unet_stat_attention_best.pth"
     if not os.path.exists(model_path):
         os.makedirs("checkpoint", exist_ok=True)
-        gdown.download("https://drive.google.com/uc?id=1KAOUlpDmTb-ePfB1GTFo_Rln136cZwQR", model_path, quiet=False)
+        file_url = "https://drive.google.com/uc?id=1KAOUlpDmTb-ePfB1GTFo_Rln136cZwQR"
+        output = gdown.download(file_url, model_path, quiet=False)
+        if output is None or not os.path.exists(model_path):
+            raise FileNotFoundError("Model download failed! Check Google Drive link or ID.")
 
     model = UNet_EdgeBranch_AttentionGate()
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cpu")  # 強制使用 CPU 避免 Streamlit Cloud 出錯
     model.load_state_dict(torch.load(model_path, map_location=device))
     model.to(device)
     model.eval()
